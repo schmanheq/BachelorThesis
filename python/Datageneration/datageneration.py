@@ -5,6 +5,7 @@ import numpy as np
 import random
 import csv
 import matplotlib as plt
+import time
 
 def create_small_network(n,k,p, show=False):
     G = nx.watts_strogatz_graph(n, k, p)
@@ -36,8 +37,43 @@ def csv_to_graph(path):
     return network
 
 def get_neighbours(network, node):
-    neighbours = np.where(network[node]==1)[0]
-    return neighbours
+    return np.where(network[node]==1)[0]
+
+def simulate_outbreak_fast(network, infection_rate, recovery_rate, iterations):
+    A = nx.to_numpy_array(network)
+    n_nodes = len(A)
+    susceptible = np.ones(n_nodes, dtype=bool)
+    infected = np.zeros(n_nodes, dtype=bool)
+    recovered = np.zeros(n_nodes, dtype=bool)
+
+    source_node = random.randint(0, n_nodes - 1)
+    susceptible[source_node] = False
+    infected[source_node] = True
+    current_state = np.full(n_nodes, 1, dtype=np.int8) 
+    current_state[source_node] = 2
+    all_snapshots = [current_state.copy()]
+
+    for i in range(iterations):
+        infected_indices = np.where(infected)[0]
+        potential_infections = A[infected_indices, :].sum(axis=0)
+        candidates = susceptible & (potential_infections > 0)
+        candidate_indices = np.where(candidates)[0]
+        K = potential_infections[candidate_indices]
+        p_infected_per_node = 1 - (1 - infection_rate)**K
+        newly_infected_mask = np.random.rand(len(candidate_indices)) < p_infected_per_node
+        newly_infected_indices = candidate_indices[newly_infected_mask]
+        susceptible[newly_infected_indices] = False
+        infected[newly_infected_indices] = True
+        recovery_mask = np.random.rand(len(infected_indices)) <= recovery_rate
+        newly_recovered_indices = infected_indices[recovery_mask]
+        infected[newly_recovered_indices] = False
+        recovered[newly_recovered_indices] = True
+        current_state[newly_infected_indices] = 2 # Infected
+        current_state[newly_recovered_indices] = 3 # Recovered
+        all_snapshots.append(current_state.copy())
+
+    all_snapshots = np.array(all_snapshots, dtype=np.int8)
+    return all_snapshots
 
 def simulate_outbreak(network, infection_rate, recovery_rate, iterations, show=False):
     #setup
@@ -108,15 +144,20 @@ def save_snapshots(data, path):
             writer.writerow(new_snapshot)
         writer.writerow(['_'])
 
-def training_data_generation(num_samples, path_network, path_snapshots):
+def save_snapshots_fast(data_snapshots, path):
+    with open(path, 'a', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerows(data_snapshots)
+        writer.writerow(['_'])
+
+def training_data_generation(num_samples,num_nodes,k_mean, infection_rate, recovery_rate,num_iterations, path_network, path_snapshots, p_prob=None):
     for i in range(num_samples):
-        random_p = random.uniform(0.0, 0.5)
-        network = create_small_network(10,4, random_p)
+        if not p_prob:
+            p_prob = random.uniform(0.001, 0.1)
+        network = create_small_network(num_nodes,k_mean, p_prob)
         to_csv(network, path_network)
-        random_infectionrate = random.random()
-        random_recoveryrate = random.random()
-        data_snapshots = simulate_outbreak(network, random_infectionrate,random_recoveryrate,10)
-        save_snapshots(data_snapshots, path_snapshots)
+        data_snapshots = simulate_outbreak_fast(network, infection_rate,recovery_rate,num_iterations-1)
+        save_snapshots_fast(data_snapshots, path_snapshots)
 
 def inference_data_generation(num_samples, path_network, path_snapshots):
     for i in range(num_samples):
@@ -128,6 +169,4 @@ def inference_data_generation(num_samples, path_network, path_snapshots):
         data_snapshots = simulate_outbreak(network, random_infectionrate,random_recoveryrate,10)
         save_snapshots(data_snapshots, path_snapshots)
 
-training_data_generation(200, '../data/training_network.csv', '../data/training_snapshots.csv')
-inference_data_generation(3, '../data/inference_network.csv', '../data/inference_snapshots.csv')
     

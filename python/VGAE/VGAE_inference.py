@@ -1,7 +1,7 @@
 import torch
 import numpy as np
-from VGAE_training import fetch_data, create_mask
-from VGAE import VariationalGraphAutoEncoder
+from python.VGAE.VGAE_training import fetch_data, create_mask
+from python.VGAE.VGAE_model import VariationalGraphAutoEncoder
 INPUT_DIM = 11
 HIDDEN_DIM = 50
 Z_DIM = 10

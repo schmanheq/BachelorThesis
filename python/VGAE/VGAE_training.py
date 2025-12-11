@@ -1,4 +1,3 @@
-
 from torch_geometric.data import Data
 import numpy as np
 from tqdm import tqdm
@@ -6,12 +5,8 @@ import torch
 import torch.nn.functional as F
 import torch.nn.utils as utils
 from torch_geometric.loader import DataLoader
-from VGAE import VariationalGraphAutoEncoder
-
-
-#ToDo:
-# - lossfunction
-# - normalization
+from .VGAE_model import VariationalGraphAutoEncoder
+from torchinfo import summary
 
 def create_mask(node_feature):
     mask = np.ones_like(node_feature, dtype=np.int8)
@@ -47,7 +42,7 @@ def fetch_data(adj_path, snapshots_path):
                 sub_node_features.append(line)
     return np.array(edge_index,dtype=int), np.array(node_features,dtype=int)
 
-def loss_function(X_reconstructed, X, mu, si,mask, beta, gamma):
+def loss_function(X_reconstructed, X, mu, si,mask, beta, gamma, N_total, timestamps):
     def turn_X_into_one_hot_encoded(X, numclasses):
         X_indices = X.long()-1
         X_hot_encoded = F.one_hot(X_indices, num_classes=numclasses)
@@ -65,26 +60,35 @@ def loss_function(X_reconstructed, X, mu, si,mask, beta, gamma):
         kl_div = -0.5 * torch.sum(1 + 2 * si_clipped - mu.pow(2) - torch.exp(2 * si_clipped))
         return beta*kl_div
     
-    def temporal_smoothness_contraint(X_reconstructed, gamma):
-        diff = X_reconstructed[:, 1:] - X_reconstructed[:, :-1]
-        squared_diff_sum = torch.sum(diff.pow(2))
-        return gamma * squared_diff_sum
+    def temporal_smoothness_contraint(X_reconstructed, gamma,N_total, timestamps): 
+        X_reshaped = X_reconstructed.view(N_total,timestamps,3)
+        log_p = F.softmax(X_reshaped, dim=2)
+        log_p_t = log_p[:, :-1, :]
+        log_p_t_plus_1 = log_p[:, 1:, :]
+        p_t = torch.exp(log_p_t)
+        p_t_plus_1 = torch.exp(log_p_t_plus_1)
+        kld_forward = F.kl_div(log_p_t, p_t_plus_1.detach(), reduction='sum')
+        kld_backward = F.kl_div(log_p_t_plus_1, p_t.detach(), reduction='sum')
+        total_kld = (kld_forward + kld_backward) / (N_total * (timestamps - 1))
+        return gamma * total_kld
     
     X = turn_X_into_one_hot_encoded(X, numclasses=3)
-    loss = categorical_cross_entropy(X_reconstructed, X, mask) + kl_divergence(mu, si, beta) + temporal_smoothness_contraint(X_reconstructed, gamma)
+    loss = categorical_cross_entropy(X_reconstructed, X, mask) + kl_divergence(mu, si, beta) + temporal_smoothness_contraint(X_reconstructed, gamma, N_total, timestamps)
     return loss
 
-def training_loop(input_dim, hidden_dim, z_dim, epochs, num_hidden_layers, lr_rate, beta, gamma, num_classes):
+def training_loop(input_dim, hidden_dim, z_dim, epochs, num_hidden_layers, lr_rate, beta, gamma, num_classes, batchsize):
     DEVICE = torch.device("cuda" if  torch.cuda.is_available() else "cpu")
-    edge_index ,node_features = fetch_data('../data/training_network.csv', '../data/training_snapshots.csv')
+    edge_index ,node_features= fetch_data('data/training_network.csv', 'data/training_snapshots.csv')
+    _, t_timestamps, n_nodes = node_features.shape
     node_features = np.rot90(node_features, axes=(1, 2)).astype(int)
     masks = [create_mask(node_feature) for node_feature in node_features]
     training_data = []
+
     for i in range(len(masks)):
         data = Data(x=torch.tensor(node_features[i],dtype=torch.float), edge_index=torch.tensor(edge_index[i], dtype=torch.int))
         data.mask = torch.tensor(masks[i], dtype=torch.int)
         training_data.append(data)
-    dataloader = DataLoader(training_data, batch_size=16, shuffle=True)
+    dataloader = DataLoader(training_data, batch_size=batchsize, shuffle=True)
 
 
     vgae = VariationalGraphAutoEncoder(input_dim, hidden_dim, z_dim, num_hidden_layers,num_classes).to(DEVICE)
@@ -98,7 +102,7 @@ def training_loop(input_dim, hidden_dim, z_dim, epochs, num_hidden_layers, lr_ra
         for batch in loop:
             batch = batch.to(DEVICE)
             x_reconstructed, mu, si = vgae(batch.x, batch.edge_index)
-            loss = loss_function(x_reconstructed, batch.x, mu, si,batch.mask, beta, gamma)
+            loss = loss_function(x_reconstructed, batch.x, mu, si,batch.mask, beta, gamma,n_nodes, t_timestamps)
 
             optimizer.zero_grad()
             loss.backward()
@@ -111,7 +115,7 @@ def training_loop(input_dim, hidden_dim, z_dim, epochs, num_hidden_layers, lr_ra
         print(f"Epoch {epoch+1}, Loss: {total_loss/len(dataloader):.4f}")
 
 
-    PATH = "../vgae_model_weights.pt"
+    PATH = "vgae_model_weights.pt"
     save_data = {
         'epoch': epoch, 
         'model_state_dict': vgae.state_dict(),
@@ -120,15 +124,3 @@ def training_loop(input_dim, hidden_dim, z_dim, epochs, num_hidden_layers, lr_ra
     }
     torch.save(save_data, PATH)
     print(f"Model weights and metadata saved to {PATH}")
-
-INPUT_DIM = 11
-HIDDEN_DIM = 50
-Z_DIM = 10
-EPOCHS = 15
-NUM_HIDDEN_LAYERS = 2
-LR_RATE = 3e-4
-BETA = 0.1
-GAMMA = 0.8
-NUM_CLASSES = 3
-
-training_loop(INPUT_DIM, HIDDEN_DIM, Z_DIM, EPOCHS, NUM_HIDDEN_LAYERS, LR_RATE, BETA, GAMMA, NUM_CLASSES)
