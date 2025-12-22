@@ -3,15 +3,16 @@ from python.VGAE.VGAE_training import training_loop
 from python.VGAE.VGAE_inference import inference
 import numpy as np
 
-def start_data_generation(NUM_SAMPLES,NUM_NODES, NUM_ITERATIONS,K_MEAN, path_network, path_snapshots):
+def start_data_generation(NUM_SAMPLES,NUM_NODES, NUM_ITERATIONS,K_MEAN, path_network, path_snapshots, path_logfile):
     training_data_generation(num_samples=NUM_SAMPLES, 
                             num_nodes=NUM_NODES, 
                             k_mean=K_MEAN, 
-                            infection_rate=0.04, 
                             recovery_rate=0.1,
                             num_iterations=NUM_ITERATIONS ,
                             path_network=path_network, 
-                            path_snapshots=path_snapshots)
+                            path_snapshots=path_snapshots,
+                            path_logfile=path_logfile,
+                            show=False)
     print("data generated.")
     return 1
 
@@ -31,13 +32,15 @@ def start_training():
 
 
 ###### Datageneration ######
-NUM_SAMPLES = 5
+DIRECTORY = 'dataset_test'
+NUM_SAMPLES = 10
 NUM_NODES = 10000
 NUM_ITERATIONS = 90
 K_MEAN = 12
-PATH_NETWORK = 'data/training_network.csv'
-PATH_SNAPSHOTS = 'data/training_snapshots.csv'
-start_data_generation(NUM_SAMPLES,NUM_NODES, NUM_ITERATIONS,K_MEAN, PATH_NETWORK, PATH_SNAPSHOTS)
+PATH_NETWORK = f'{DIRECTORY}/training_network.csv'
+PATH_SNAPSHOTS = f'{DIRECTORY}/training_snapshots.csv'
+PATH_LOGFILE = f'{DIRECTORY}/logfile.txt'
+start_data_generation(NUM_SAMPLES,NUM_NODES, NUM_ITERATIONS,K_MEAN, PATH_NETWORK, PATH_SNAPSHOTS, PATH_LOGFILE)
 ###### Datageneration END ######
 
 ###### Training ######

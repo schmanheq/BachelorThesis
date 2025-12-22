@@ -6,7 +6,6 @@ import torch.nn.functional as F
 import torch.nn.utils as utils
 from torch_geometric.loader import DataLoader
 from .VGAE_model import VariationalGraphAutoEncoder
-from torchinfo import summary
 
 def create_mask(node_feature):
     mask = np.ones_like(node_feature, dtype=np.int8)
