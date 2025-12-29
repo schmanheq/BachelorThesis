@@ -41,8 +41,8 @@ class VariationalGraphAutoEncoder(nn.Module):
             x_reconstructed = F.relu(layer(x_reconstructed, edge_index))
         x_raw_logits = self.hidden_to_input_reconstructed(x_reconstructed, edge_index)
         x_raw_logits = x_raw_logits.view(-1, self.num_classes)
-        x_probabilities = F.softmax(x_raw_logits, dim=1)
-        return x_probabilities
+        #x_probabilities = F.softmax(x_raw_logits, dim=1) # apparently its crucial to not use softmax as later in the CE loss does require raw logits
+        return x_raw_logits
     
     def forward(self, x, edge_index):
         mu,sigma = self.encode(x, edge_index)

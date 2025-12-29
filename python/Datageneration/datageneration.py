@@ -22,8 +22,8 @@ def calc_infection_rate(G, recovery_rate):
     beta_upper = (upperbound*recovery_rate)/(-upperbound+upperbound*recovery_rate+((second_moment-first_moment)/first_moment))
     test_upper = beta_upper/(beta_upper+recovery_rate-beta_upper*recovery_rate) * ((second_moment-first_moment)/first_moment)
     test_lower = beta_lower/(beta_lower+recovery_rate-beta_lower*recovery_rate) * ((second_moment-first_moment)/first_moment)
-    print(f"infection rates are {beta_lower, beta_upper}")
-    print(f"Reproduction rates: {test_lower, test_upper}")
+    #print(f"infection rates are {beta_lower, beta_upper}")
+    #print(f"Reproduction rates: {test_lower, test_upper}")
     return beta_lower, beta_upper
 
 def to_csv(graph, path):
@@ -46,6 +46,9 @@ def simulate_outbreak_fast(network, infection_rate, recovery_rate, iterations,pa
 
     A = sparse_matrix.toarray()
     n_nodes = len(A)
+
+
+    
     susceptible = np.ones(n_nodes, dtype=bool)
     infected = np.zeros(n_nodes, dtype=bool)
     recovered = np.zeros(n_nodes, dtype=bool)
@@ -122,7 +125,6 @@ def simulate_outbreak_fast(network, infection_rate, recovery_rate, iterations,pa
             nx.draw(network,pos,node_color=color_list, node_size=100, with_labels=False)
             plt.title(f"Iteration {i}")
             plt.show()
-    print(i)
     log_data.append(f'early death in timestamp {early_death} \n')
     log_data.append(f'susceptible:{susceptible.sum()}, infected:{infected.sum()}, recovered:{recovered.sum()} \n')
     all_snapshots = np.array(all_snapshots, dtype=np.int8)
@@ -201,7 +203,6 @@ def training_data_generation(num_samples,num_nodes,k_mean, recovery_rate,num_ite
         network = create_small_network(num_nodes,k_mean, p_prob)
         to_csv(network, path_network)
         beta_lower, beta_upper = calc_infection_rate(network, recovery_rate)
-        #beta_upper = 0.33
         data_snapshots = simulate_outbreak_fast(network, beta_upper,recovery_rate,num_iterations-1,path_logfile, show )
         save_snapshots_fast(data_snapshots, path_snapshots)
 
