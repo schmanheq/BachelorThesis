@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 
 def create_small_network(n,k,p, show=False):
     G_ig = ig.Graph.Watts_Strogatz(dim=1, size=n, nei=k//2, p=p)
-    print("Graph created.")
     return G_ig
 
 def calc_infection_rate(G, recovery_rate):
@@ -203,8 +202,9 @@ def training_data_generation(num_samples,num_nodes,k_mean, recovery_rate,num_ite
         network = create_small_network(num_nodes,k_mean, p_prob)
         to_csv(network, path_network)
         beta_lower, beta_upper = calc_infection_rate(network, recovery_rate)
-        data_snapshots = simulate_outbreak_fast(network, beta_upper,recovery_rate,num_iterations-1,path_logfile, show )
+        data_snapshots = simulate_outbreak_fast(network, beta_upper,recovery_rate,num_iterations-1,path_logfile, show)
         save_snapshots_fast(data_snapshots, path_snapshots)
+        print(f"Graph {i} created. ")
 
 def get_gamma(num_nodes, k_mean, recovery_rate):
     network = create_small_network(num_nodes, k_mean, p=0.1)
