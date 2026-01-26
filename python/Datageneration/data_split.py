@@ -70,7 +70,7 @@ def split_giant_files(adj_csv, feat_csv, mask_csv, target_dir):
     print(f"Done! Saved {graph_id} graphs to {target_dir}")
 
 # Call the function
-split_giant_files('dataset_inference/training_network.csv',
-                  'dataset_inference/training_snapshots.csv', 
-                  'dataset_test/masks_high.csv', 
-                  'processed_graphs_high')
+split_giant_files('dataset_test/training_network.csv',
+                  'dataset_test/training_snapshots.csv', 
+                  'masks/masks_high.csv', 
+                  'processed_graphs_test_high')

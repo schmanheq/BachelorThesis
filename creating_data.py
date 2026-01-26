@@ -17,7 +17,7 @@ def start_data_generation(NUM_SAMPLES,NUM_NODES, NUM_ITERATIONS,K_MEAN, path_net
 def create_mask_optimize(node_feature, fraction_missing_data):
     rows = 10000
     cols = 90
-    node_feature = np.ones((10000,90))
+    node_feature = np.ones((rows,cols))
     num_to_mask = int(cols * fraction_missing_data)
     cols_idx = np.argsort(np.random.rand(rows, cols), axis=1)[:, :num_to_mask]
     mask = np.ones_like(node_feature, dtype=np.int8)
@@ -33,20 +33,20 @@ def create_all_masks(num_samples, path_highest, path_medium, path_lowest):
     print("Masks created")
 
 ##### create masks ######
-NUMSAMPLES = 2
-PATH_MASKS_HIGH = 'dataset_test/masks_high.csv'
-PATH_MASKS_MED = 'dataset_test/masks_med.csv'
-PATH_MASKS_LOW = 'dataset_test/masks_low.csv'
+NUMSAMPLES = 4
+PATH_MASKS_HIGH = 'masks/masks_high.csv'
+PATH_MASKS_MED = 'masks/masks_med.csv'
+PATH_MASKS_LOW = 'masks/masks_low.csv'
 #create_all_masks(NUMSAMPLES, PATH_MASKS_HIGH, PATH_MASKS_MED, PATH_MASKS_LOW)
 
 ###### Datageneration ######
-DIRECTORY = 'dataset_inference'
-NUM_SAMPLES = 2
-NUM_NODES = 10000
-NUM_ITERATIONS = 90
-K_MEAN = 12
+DIRECTORY = 'dataset_test'
+NUM_SAMPLES = 4
+NUM_NODES = 100
+NUM_ITERATIONS = 10
+K_MEAN = 6
 PATH_NETWORK = f'{DIRECTORY}/training_network.csv'
 PATH_SNAPSHOTS = f'{DIRECTORY}/training_snapshots.csv'
 PATH_LOGFILE = f'{DIRECTORY}/logfile.txt'
-#start_data_generation(NUM_SAMPLES,NUM_NODES, NUM_ITERATIONS,K_MEAN, PATH_NETWORK, PATH_SNAPSHOTS, PATH_LOGFILE)
+start_data_generation(NUM_SAMPLES,NUM_NODES, NUM_ITERATIONS,K_MEAN, PATH_NETWORK, PATH_SNAPSHOTS, PATH_LOGFILE)
 ###### Datageneration END ######

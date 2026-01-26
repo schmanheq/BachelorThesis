@@ -1,33 +1,25 @@
-import numpy as np
-from python.VGAE.VGAE_training import fetch_data_optimized, create_mask_optimize
-from python.Datageneration.datageneration import save_snapshots_fast
 
+import torch
 
-
-def majority_class_predictor(adj_path, snapshots_path, fraction_missing_data):
-    _, node_features = fetch_data_optimized(adj_path, snapshots_path)
-    node_features = np.rot90(node_features, axes=(1, 2)).astype(int)
-    masks = [create_mask_optimize(node_feature, fraction_missing_data) for node_feature in node_features]
-    masks = np.array(masks)
-    node_features = node_features*masks
-    node_features = node_features[0]
-    for i in range(len(node_features)):
-        try:
-            first_infected = np.where(node_features[i]==2)[0][0]
-        except IndexError:
-            first_infected=None
-        try:
-            first_recovered = np.where(node_features[i]==3)[0][0]
-        except IndexError:
-            first_recovered=None
-
-        if first_recovered:
-            node_features[i][:first_infected]=1
-            node_features[i][first_infected:first_recovered]=2
-            node_features[i][first_recovered:]=3
-        elif first_infected:
-            node_features[i][:first_infected]=1
-            node_features[i][first_infected:]=2
-        else:
-            node_features[i][...]=1
-    return node_features
+def fast_majority_class_predictor(x_input):
+    # Ensure we are working with a torch tensor
+    # 1. Create masks for where the states '2' and '3' first appear
+    is_2 = (x_input == 2)
+    is_3 = (x_input == 3)
+    
+    # 2. Use cummax to "spread" the state to the right
+    # Once a '2' or '3' is seen, the mask remains True for the rest of the row
+    has_seen_2 = is_2.cummax(dim=1)[0]
+    has_seen_3 = is_3.cummax(dim=1)[0]
+    
+    # 3. Apply logic using torch.where
+    # Default state is 1 (Susceptible)
+    out = torch.ones_like(x_input)
+    
+    # If we've seen a 2, it becomes 2
+    out = torch.where(has_seen_2, torch.tensor(2, device=x_input.device), out)
+    
+    # If we've seen a 3, it becomes 3 (this overrides the 2 because 3 comes later)
+    out = torch.where(has_seen_3, torch.tensor(3, device=x_input.device), out)
+    
+    return out

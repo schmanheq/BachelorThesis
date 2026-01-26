@@ -67,7 +67,7 @@ def simulate_outbreak_fast(network, infection_rate, recovery_rate, iterations,pa
     for i in range(iterations):
         if infected.sum()==0:
             early_death=i
-            break
+            #break
         # See who is infected
         infected_indices = np.where(infected)[0] 
 

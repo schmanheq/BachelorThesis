@@ -11,12 +11,14 @@ def start_training(PATH_PROCESSED_GRAPHS, WEIGHTS_PATH):
     BETA = 0.1
     GAMMA = 0.8
     NUM_CLASSES = 3
-    BATCH_SIZE = 2
+    BATCH_SIZE = 16
     training_loop(INPUT_DIM, HIDDEN_DIMS, Z_DIM, EPOCHS, NUM_HIDDEN_LAYERS, LR_RATE, BETA, GAMMA, NUM_CLASSES, BATCH_SIZE, PATH_PROCESSED_GRAPHS, WEIGHTS_PATH)
     return 1
 
 ###### Training ######
-PATH_PROCESSED_GRAPHS = 'processed_graphs_high'
-WEIGHTS_PATH = 'test_weights.pt'
+
+dataset = "dataset0"
+PATH_PROCESSED_GRAPHS = 'processed_graphs_dataset0_low'
+WEIGHTS_PATH= 'dataset2_graphs_low_imbalance_08_9_02.pt'
 start_training(PATH_PROCESSED_GRAPHS, WEIGHTS_PATH)
 ###### Training END ######

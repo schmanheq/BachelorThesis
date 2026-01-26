@@ -6,20 +6,36 @@ from torch_geometric.loader import DataLoader
 from .VGAE_model import VariationalGraphAutoEncoder
 from ..Datageneration.dataloader import MyGraphDataset
 
-def loss_function(X_reconstructed, X, mu, si, beta, gamma, N_total, timestamps, batch_size):
+def handle_class_imbalance(x_input, class_imbalance_count):
+    susceptibles = (x_input==1).sum()
+    infected = (x_input==2).sum()
+    recovered = (x_input==3).sum()
+    new_class_count=class_imbalance_count+torch.tensor([susceptibles, infected, recovered])
+    imbalance_weights = 1/new_class_count
+    imbalance_weights = imbalance_weights/imbalance_weights.sum()
+    return new_class_count, imbalance_weights
+
+def loss_function(X_reconstructed, X, mu, si, beta, gamma, N_total, timestamps, batch_size, imbalance_weights, edge_index):
     X_reconstructed = X_reconstructed.view(-1,90, 3)
 
-    def categorical_cross_entropy(X_res, X_orig):
+    def categorical_cross_entropy(X_res, X_orig, imbalance_weights):
         logits = X_res.reshape(-1, 3)
+        imbalance_weights = imbalance_weights.to(logits.device)
         targets = (X_orig.long() - 1).reshape(-1)
-        ce = F.cross_entropy(logits, targets, reduction='none')
-        return ce.mean()
+        ce = F.cross_entropy(logits, targets,weight=imbalance_weights, reduction='mean')
+        return ce
     
     def kl_divergence(mu, si, beta):
         si_min_max = 2.0
         si_clipped = torch.clamp(si, min=-si_min_max, max=si_min_max)
         kl_div = -0.5 * torch.sum(1 + 2 * si_clipped - mu.pow(2) - torch.exp(2 * si_clipped))
         return beta*kl_div/batch_size
+    
+    def smoothness_constraint_optimized(X_reconstructed, gamma, edge_index):
+        node_sums = X_reconstructed.sum(dim=1)
+        row, col = edge_index
+        diffs = (node_sums[row] - node_sums[col])**2
+        return gamma * diffs.sum()
     
     def temporal_smoothness_contraint(X_reconstructed, gamma,N_total, timestamps): 
         log_p = F.softmax(X_reconstructed, dim=-1)
@@ -33,7 +49,7 @@ def loss_function(X_reconstructed, X, mu, si, beta, gamma, N_total, timestamps, 
         return gamma * total_kld
     
     #X = turn_X_into_one_hot_encoded(X, numclasses=3) # apparently it work with just the raw classes better performance wise than with hot encoded labels
-    loss = categorical_cross_entropy(X_reconstructed, X) + kl_divergence(mu, si, beta) + temporal_smoothness_contraint(X_reconstructed, gamma, N_total, timestamps)
+    loss = categorical_cross_entropy(X_reconstructed, X, imbalance_weights) + kl_divergence(mu, si, beta) + smoothness_constraint_optimized(X_reconstructed, gamma, edge_index)# +temporal_smoothness_contraint(X_reconstructed, gamma, N_total, timestamps)
     return loss
 
 def training_loop(input_dim, hidden_dim, z_dim, epochs, num_hidden_layers, lr_rate, beta, gamma, num_classes, batchsize, path_processed_graphs, weights_path):
@@ -45,6 +61,8 @@ def training_loop(input_dim, hidden_dim, z_dim, epochs, num_hidden_layers, lr_ra
     dataloader = DataLoader(training_data, batch_size=batchsize, shuffle=True)
     vgae = VariationalGraphAutoEncoder(input_dim, hidden_dim, z_dim, num_hidden_layers,num_classes).to(DEVICE)
     optimizer = torch.optim.Adam(vgae.parameters(), lr=lr_rate)
+    class_imbalance_count = torch.tensor([0,0,0])
+    imbalance_weights = torch.tensor([0.08, 0.9, 0.02])
 
     for epoch in range(epochs):
         vgae.train()
@@ -52,10 +70,11 @@ def training_loop(input_dim, hidden_dim, z_dim, epochs, num_hidden_layers, lr_ra
         total_loss = 0
 
         for batch in loop:
+            class_imbalance_count, imbalance_weights = handle_class_imbalance(batch.x, class_imbalance_count)
             batch = batch.to(DEVICE) #batch.x has shape batch_size*10000,90
             x_input = batch.x * batch.train_mask #apply the mask to the input
             x_reconstructed, mu, si = vgae(x_input, batch.edge_index) #x_reconstructed has shape batch_size*10000*90,3
-            loss = loss_function(x_reconstructed, batch.x, mu, si, beta, gamma,n_nodes, t_timestamps, batchsize)#calc the loss using the reconstructed and original nodefeatures
+            loss = loss_function(x_reconstructed, batch.x, mu, si, beta, gamma,n_nodes, t_timestamps, batchsize, imbalance_weights, batch.edge_index)#calc the loss using the reconstructed and original nodefeatures
             optimizer.zero_grad()
             loss.backward()
             utils.clip_grad_norm_(vgae.parameters(), max_norm=1.0)

@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch_geometric.nn import GCNConv, InnerProductDecoder
+from torch_geometric.nn import GCNConv
 
 class VariationalGraphAutoEncoder(nn.Module):
     def __init__(self, in_channels, hidden_channels, z_channels, num_hidden_layers, num_classes):
