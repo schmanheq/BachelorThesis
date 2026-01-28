@@ -11,7 +11,7 @@ def mice_train(x,masks):
     joblib.dump(mice_model, 'baseline_mice_v1.pkl')
     print("mice Training finishes")
 
-def mice_inf(x_input,mask, model_path):
+def mice_inf(model, x_input,mask):
     x_test = x_input.copy().astype(float)
     x_test[mask == 0]=np.nan
     loaded_mice = joblib.load(model_path)

@@ -22,12 +22,18 @@ def rf_train(x_full, mask_full):
     joblib.dump(rf_model, 'baseline_rf_v1.pkl')
     print("RF training finished")
 
-def rf_inference(x_input,mask, model_path):
-    x_test = x_input.copy().astype(float)
-    x_test[mask == 0]=np.nan
-    loaded_rf = joblib.load(model_path)
-    predictions = loaded_rf.predict(x_test)
-    return predictions
+def rf_inf(model,x_input, mask, gpu=False):
+    x_test = x_input.copy().astype('float32')
+    x_test[mask == 0] = np.nan    
+    if gpu:
+        device = torch_directml.device()        
+        x_test_torch = torch.from_numpy(x_test).to(device)
+        with torch.no_grad():
+            predictions = model.predict(x_test_torch)
+        return predictions.cpu().numpy()
+    
+    else:
+        return model.predict(x_test)
 
 def randomforest_impute(x_input):
     x_np = x_input.detach().cpu().numpy().astype(np.float64)
