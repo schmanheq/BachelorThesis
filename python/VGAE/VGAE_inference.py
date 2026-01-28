@@ -53,34 +53,39 @@ def inference_baselines(PROCESSED_GRAPH_PATH, randomforest, knn, mice, majority_
     total_f1_knn = torch.tensor([0.0,0.0,0.0])
     total_f1_mice = torch.tensor([0.0,0.0,0.0])
     total_f1_maj = torch.tensor([0.0,0.0,0.0])
-    i=1
+    all_training_samples = {
+        'x_input':[],
+        'trainmask':[]
+    }
     for batch in loop:
         x_input = batch.x*batch.train_mask
-        if randomforest:
-            x_reconstructed_rf = randomforest_impute(x_input)
-            recall, precision,f1 = basic_evaluation_metric(x_reconstructed_rf, x_input, batch.train_mask)
-            #custom_metric = custom_evaluation_metric(x_reconstructed_rf)
-            #custom_metric_strict = custom_evaluation_metric_strict(x_reconstructed_rf, (batch.x+1))
-            
-        if knn:
-            x_reconstructed_knn = knn_impute(x_input)
-            recall, precision,f1 = basic_evaluation_metric(x_reconstructed_knn, x_input, batch.train_mask)
-            #custom_metric = custom_evaluation_metric(x_reconstructed_knn)
-            #custom_metric_strict = custom_evaluation_metric_strict(x_reconstructed_knn, (batch.x+1))
-            total_f1_knn+=f1
-        if mice:
-            x_reconstructed_mice = knn_impute(x_input)
-            recall, precision,f1 = basic_evaluation_metric(x_reconstructed_mice, x_input, batch.train_mask)
-            #custom_metric = custom_evaluation_metric(x_reconstructed_knn)
-            #custom_metric_strict = custom_evaluation_metric_strict(x_reconstructed_knn, (batch.x+1))
-            total_f1_mice+=f1
-        if majority_predictor:
-            x_reconstructed_maj = fast_majority_class_predictor(x_input)
-            recall, precision,f1 = basic_evaluation_metric(x_reconstructed_maj, x_input, batch.train_mask)
-            total_f1_maj+=f1
-        i+=1
-        print(i)
-    return total_f1_rf/i,total_f1_knn/i,total_f1_mice/i,total_f1_maj/i
+        all_training_samples['x_input'].append(x_input)
+        all_training_samples['trainmask'].append(batch.train_mask)
+    if randomforest:
+        x_reconstructed_rf = randomforest_impute(all_training_samples['x_input'])
+        recall, precision,f1 = basic_evaluation_metric(x_reconstructed_rf, all_training_samples['x_input'], all_training_samples['trainmask'])
+        #custom_metric = custom_evaluation_metric(x_reconstructed_rf)
+        #custom_metric_strict = custom_evaluation_metric_strict(x_reconstructed_rf, (batch.x+1))
+        
+    if knn:
+        x_reconstructed_knn = knn_impute(x_input)
+        recall, precision,f1 = basic_evaluation_metric(x_reconstructed_knn, x_input, batch.train_mask)
+        #custom_metric = custom_evaluation_metric(x_reconstructed_knn)
+        #custom_metric_strict = custom_evaluation_metric_strict(x_reconstructed_knn, (batch.x+1))
+        total_f1_knn+=f1
+    if mice:
+        x_reconstructed_mice = knn_impute(x_input)
+        recall, precision,f1 = basic_evaluation_metric(x_reconstructed_mice, x_input, batch.train_mask)
+        #custom_metric = custom_evaluation_metric(x_reconstructed_knn)
+        #custom_metric_strict = custom_evaluation_metric_strict(x_reconstructed_knn, (batch.x+1))
+        total_f1_mice+=f1
+    if majority_predictor:
+        x_reconstructed_maj = fast_majority_class_predictor(x_input)
+        recall, precision,f1 = basic_evaluation_metric(x_reconstructed_maj, x_input, batch.train_mask)
+        total_f1_maj+=f1
+    num_samples = len(all_training_samples['x_input'])
+    print(total_f1_rf/num_samples)
+    #return total_f1_rf/i,total_f1_knn/i,total_f1_mice/i,total_f1_maj/i
         
 
 

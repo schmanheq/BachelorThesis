@@ -14,7 +14,7 @@ def start_inference(processed_graph_path, weights_path):
     
 ########## inference START ##########
 dataset = 'dataset0'
-processed_graph_path = f'processed_graphs_dataset_inference_high'
+processed_graph_path = f'inference_data/processed_graphs_dataset_inference1_high'
 weights_path = f'dataset0_weights/dataset0_graphs_high_imbalance_08_9_02.pt'
 directory = 'dataset0_weights'
 #start_inference(processed_graph_path, weights_path)
