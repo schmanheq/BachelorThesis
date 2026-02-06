@@ -1,5 +1,7 @@
-from python.VGAE.VGAE_inference import inference, inference_baselines
+from python.VGAE.VGAE_inference import inference
+from python.Baselines.baseline_inference import inference_baselines
 import os
+from concurrent.futures import ProcessPoolExecutor
 
 
 def start_inference(processed_graph_path, weights_path):
@@ -11,18 +13,19 @@ def start_inference(processed_graph_path, weights_path):
               PROCESSED_GRAPH_PATH=processed_graph_path,
               WEIGHTS_PATH = weights_path)
     
-    
-########## inference START ##########
-dataset = 'dataset0'
-processed_graph_path = f'inference_data/processed_graphs_dataset_inference1_high'
-weights_path = f'dataset0_weights/dataset0_graphs_high_imbalance_08_9_02.pt'
-directory = 'dataset0_weights'
-#start_inference(processed_graph_path, weights_path)
-#################### ATTENTION ####################
-random_forest = True
-knn = False
-mice = False
-maj = False
-rf, knn, mice, maj = inference_baselines(processed_graph_path, random_forest,knn, mice, maj)
-print(rf, knn,mice, maj)
-########## inference END ##########
+
+
+if __name__ == '__main__':
+
+    ########## inference START ##########
+    processed_graph_path = f'dataset0/inference_processed_data/processed_graphs_dataset0_high'
+    weights_path = f'dataset0_weights/dataset0_graphs_high_imbalance_08_9_02.pt'
+    random_forest = False
+    knn = "dataset0/dataset0_weights/baseline_knn_v1_high.pkl"
+    mice = False
+    maj = False
+
+    #start_inference(processed_graph_path, weights_path)
+    results = inference_baselines(processed_graph_path, random_forest,knn, mice, maj)
+    print(results)
+    ########## inference END ##########

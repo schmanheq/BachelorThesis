@@ -1,7 +1,5 @@
 import networkx as nx
 import igraph as ig
-from torch_geometric.utils import dense_to_sparse
-import torch 
 import numpy as np
 import random
 import csv

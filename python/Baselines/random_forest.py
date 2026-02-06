@@ -4,9 +4,9 @@ import torch
 from missforest import MissForest
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 import joblib
+import pandas as pd
 
-
-def rf_train(x_full, mask_full):
+def rf_train(x_full, mask_full, model_path):
     fast_rf = RandomForestRegressor(
         n_estimators=7, 
         max_depth=3,
@@ -19,21 +19,15 @@ def rf_train(x_full, mask_full):
     x_train = x_full.copy().astype(float)
     x_train[mask_full == 0] = np.nan 
     rf_model.fit(x_train)
-    joblib.dump(rf_model, 'baseline_rf_v1.pkl')
+    joblib.dump(rf_model, model_path)
     print("RF training finished")
 
-def rf_inf(model,x_input, mask, gpu=False):
-    x_test = x_input.copy().astype('float32')
-    x_test[mask == 0] = np.nan    
-    if gpu:
-        device = torch_directml.device()        
-        x_test_torch = torch.from_numpy(x_test).to(device)
-        with torch.no_grad():
-            predictions = model.predict(x_test_torch)
-        return predictions.cpu().numpy()
-    
-    else:
-        return model.predict(x_test)
+def rf_inf(x_input, model):
+    x_test = x_input.astype(np.float64)
+    x_df = pd.DataFrame(x_test)
+    imputed_values = model.transform(x_df)
+    imputed_values = np.round(imputed_values).astype(int)
+    return imputed_values
 
 def randomforest_impute(x_input):
     x_np = x_input.detach().cpu().numpy().astype(np.float64)

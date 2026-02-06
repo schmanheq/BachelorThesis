@@ -24,10 +24,10 @@ WEIGHTS_PATH= 'dataset2_graphs_low_imbalance_08_9_02.pt'
 ###### Training VGAE END ######
 
 ###### Training baselines ######
-rf = False
+rf = True
 knn = True
 mice = True
-process_graph_path = "training_data/processed_graphs_dataset0_high"
+process_graph_path = "training_data/processed_graphs_dataset0_low"
 baseline_training(rf,knn,mice,process_graph_path)
 ###### Training baselines END ######
 
