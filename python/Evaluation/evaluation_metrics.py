@@ -3,6 +3,11 @@ import torch
 import numpy as np
 
 def basic_evaluation_metric(preds, target, mask):
+    preds = torch.from_numpy(preds).long()
+    target = torch.from_numpy(target).long()
+    mask = torch.from_numpy(mask).long()
+
+    
     clean_preds = preds[mask].long() - 1
     clean_target = target[mask].long() - 1
 

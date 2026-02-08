@@ -1,6 +1,7 @@
 from python.VGAE.VGAE_training import training_loop
 from python.Baselines.baseline_training import baseline_training
 import numpy as np
+import time
 
 def start_training(PATH_PROCESSED_GRAPHS, WEIGHTS_PATH):
     INPUT_DIM = 90
@@ -24,10 +25,10 @@ WEIGHTS_PATH= 'dataset2_graphs_low_imbalance_08_9_02.pt'
 ###### Training VGAE END ######
 
 ###### Training baselines ######
-rf = True
-knn = True
-mice = True
-process_graph_path = "training_data/processed_graphs_dataset0_low"
-baseline_training(rf,knn,mice,process_graph_path)
+start = time.time()
+process_graph_path = "dataset0/inference_processed_data/processed_graphs_dataset0_high"
+baseline_training(process_graph_path)
+end = time.time()
+print(end-start)
 ###### Training baselines END ######
 

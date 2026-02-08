@@ -33,18 +33,18 @@ def create_all_masks(num_samples, path_highest, path_medium, path_lowest):
     print("Masks created")
 
 ##### create masks ######
-NUMSAMPLES = 4
+NUMSAMPLES = 16
 PATH_MASKS_HIGH = 'masks/masks_high.csv'
 PATH_MASKS_MED = 'masks/masks_med.csv'
 PATH_MASKS_LOW = 'masks/masks_low.csv'
 #create_all_masks(NUMSAMPLES, PATH_MASKS_HIGH, PATH_MASKS_MED, PATH_MASKS_LOW)
 
 ###### Datageneration ######
-DIRECTORY = 'dataset_test'
-NUM_SAMPLES = 4
-NUM_NODES = 100
-NUM_ITERATIONS = 10
-K_MEAN = 6
+DIRECTORY = 'dataset0'
+NUM_SAMPLES = 16
+NUM_NODES = 10000
+NUM_ITERATIONS = 90
+K_MEAN = 12
 PATH_NETWORK = f'{DIRECTORY}/training_network.csv'
 PATH_SNAPSHOTS = f'{DIRECTORY}/training_snapshots.csv'
 PATH_LOGFILE = f'{DIRECTORY}/logfile.txt'
