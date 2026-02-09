@@ -4,8 +4,6 @@ import joblib
 from sklearn.decomposition import TruncatedSVD
 from sklearn.impute import SimpleImputer
 
-
-
 def svd_training(data,path, rank=20):
     svd = TruncatedSVD(n_components=rank, random_state=42)
     imp = SimpleImputer(missing_values=np.nan, strategy='most_frequent')

@@ -52,17 +52,17 @@ def loss_function(X_reconstructed, X, mu, si, beta, gamma, N_total, timestamps, 
     loss = categorical_cross_entropy(X_reconstructed, X, imbalance_weights) + kl_divergence(mu, si, beta) + smoothness_constraint_optimized(X_reconstructed, gamma, edge_index)# +temporal_smoothness_contraint(X_reconstructed, gamma, N_total, timestamps)
     return loss
 
-def training_loop(input_dim, hidden_dim, z_dim, epochs, num_hidden_layers, lr_rate, beta, gamma, num_classes, batchsize, path_processed_graphs, weights_path):
+def training_loop(input_dim, hidden_dim, z_dim, epochs, num_hidden_layers_enc, num_hidden_layers_dec, lr_rate, beta, gamma, num_classes, batchsize, path_processed_graphs, weights_path):
     n_nodes = 10000
     t_timestamps = 90
     DEVICE = torch.device("cuda" if  torch.cuda.is_available() else "cpu")
     print(f"device: {DEVICE}")
     training_data = MyGraphDataset(root_dir=path_processed_graphs)
     dataloader = DataLoader(training_data, batch_size=batchsize, shuffle=True)
-    vgae = VariationalGraphAutoEncoder(input_dim, hidden_dim, z_dim, num_hidden_layers,num_classes).to(DEVICE)
+    vgae = VariationalGraphAutoEncoder(input_dim, hidden_dim, z_dim, num_hidden_layers_enc, num_hidden_layers_dec,num_classes).to(DEVICE)
     optimizer = torch.optim.Adam(vgae.parameters(), lr=lr_rate)
     class_imbalance_count = torch.tensor([0,0,0])
-    imbalance_weights = torch.tensor([0.08, 0.9, 0.02])
+    imbalance_weights = torch.tensor([0.08, 0.9, 0.2])
 
     for epoch in range(epochs):
         vgae.train()

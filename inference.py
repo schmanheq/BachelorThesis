@@ -7,7 +7,8 @@ def start_VGAEinference(processed_graph_path, weights_path):
     inference(INPUT_DIM=90,
               HIDDEN_DIM=128,
               Z_DIM=10,
-              NUM_HIDDEN_LAYERS=2,
+              NUM_HIDDEN_LAYERS_ENC=2,
+              NUM_HIDDEN_LAYERS_DEC=2,
               NUM_CLASSES=3,
               PROCESSED_GRAPH_PATH=processed_graph_path,
               WEIGHTS_PATH = weights_path)

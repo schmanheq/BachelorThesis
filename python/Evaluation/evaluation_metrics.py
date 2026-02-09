@@ -1,4 +1,5 @@
-from torchmetrics.classification import MulticlassRecall, MulticlassPrecision, MulticlassF1Score
+from torchmetrics.classification import MulticlassRecall, MulticlassPrecision, MulticlassF1Score, MulticlassConfusionMatrix 
+from sklearn.metrics import matthews_corrcoef
 import torch
 import numpy as np
 
@@ -20,6 +21,8 @@ def basic_evaluation_metric(preds, target, mask):
     clean_preds = (preds-1)[mask.bool()]
     clean_target = (target-1)[mask.bool()]
 
+
+
     precision_metric = MulticlassPrecision(num_classes=3, average='none')
     recall_metric = MulticlassRecall(num_classes=3, average='none')
     f1_metric = MulticlassF1Score(num_classes=3, average='none')
@@ -29,6 +32,46 @@ def basic_evaluation_metric(preds, target, mask):
         precision_metric(clean_preds, clean_target),
         f1_metric(clean_preds, clean_target)
     )
+
+def confusion_matrix(preds,target,mask):
+    try:
+        preds = torch.from_numpy(preds).long()
+    except:
+        pass
+    try:
+        target = torch.from_numpy(target).long()
+    except:
+        pass
+    try:
+        mask = torch.from_numpy(mask).long()
+    except:
+        pass
+    mask = ~(mask.bool())
+    clean_preds = (preds-1)[mask.bool()]
+    clean_target = (target-1)[mask.bool()]
+    metric = MulticlassConfusionMatrix(num_classes=3)
+    res = metric(clean_preds, clean_target)
+    return res
+
+def matth_coeff(preds,target,mask):
+    try:
+        preds = torch.from_numpy(preds).long()
+    except:
+        pass
+    try:
+        target = torch.from_numpy(target).long()
+    except:
+        pass
+    try:
+        mask = torch.from_numpy(mask).long()
+    except:
+        pass
+    
+    mask = ~(mask.bool())
+    clean_preds = (preds-1)[mask.bool()]
+    clean_target = (target-1)[mask.bool()]
+    res = matthews_corrcoef(clean_preds, clean_target)
+    return res
 
 def custom_evaluation_metric(preds, batch_size):
     if preds.ndim!=3:
