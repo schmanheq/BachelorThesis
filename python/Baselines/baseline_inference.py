@@ -12,6 +12,7 @@ def inference_baselines(PROCESSED_GRAPH_PATH, simple_imputer, majority_predictor
     inference_data = MyGraphDataset(root_dir=PROCESSED_GRAPH_PATH)
     dataloader = DataLoader(inference_data, batch_size=batch_size)
     total_f1 = torch.tensor([0.0,0.0,0.0])
+    custom_metric_tracker = 0
     counter = 0
     ##### Inference LOOP ##### 
     for batch in dataloader:
@@ -25,7 +26,7 @@ def inference_baselines(PROCESSED_GRAPH_PATH, simple_imputer, majority_predictor
             results = simpleImpute(x_all, batch_size)
             _,_,f1 = basic_evaluation_metric(results, x_org, mask)
             custom_metric = custom_evaluation_metric(results, batch_size)
-            print(custom_metric)
+            custom_metric_tracker+=custom_metric
             total_f1+=f1
         
         if svd:
@@ -36,8 +37,9 @@ def inference_baselines(PROCESSED_GRAPH_PATH, simple_imputer, majority_predictor
 
         if majority_predictor:
             res = fast_majority_class_predictor(x_all)
-            _,_,f1 = basic_evaluation_metric(res, x, batch.train_mask)
+            _,_,f1 = basic_evaluation_metric(res, x_org, mask)
             total_f1+=f1
         counter+=1
-    print(total_f1/counter)
+    print("F1 Score: " + str(total_f1/counter))
+    print("Custom Metric score: "+ str(custom_metric_tracker/counter))
     return        

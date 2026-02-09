@@ -2,6 +2,7 @@
 import torch
 
 def fast_majority_class_predictor(x_input):
+    x_input = torch.tensor(x_input).reshape(-1,90)
     # Ensure we are working with a torch tensor
     # 1. Create masks for where the states '2' and '3' first appear
     is_2 = (x_input == 2)

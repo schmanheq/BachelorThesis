@@ -3,11 +3,19 @@ import torch
 import numpy as np
 
 def basic_evaluation_metric(preds, target, mask):
-    if not torch.is_tensor(preds):
+    try:
         preds = torch.from_numpy(preds).long()
+    except:
+        pass
+    try:
         target = torch.from_numpy(target).long()
+    except:
+        pass
+    try:
         mask = torch.from_numpy(mask).long()
-
+    except:
+        pass
+    
     mask = ~(mask.bool())
     clean_preds = (preds-1)[mask.bool()]
     clean_target = (target-1)[mask.bool()]
