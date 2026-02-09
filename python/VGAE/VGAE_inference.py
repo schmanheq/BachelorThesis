@@ -6,6 +6,7 @@ from ..Evaluation.prob_to_states import transform_to_states
 from ..Evaluation.evaluation_metrics import basic_evaluation_metric, custom_evaluation_metric, custom_evaluation_metric_strict
 from tqdm import tqdm
 import torch.nn.functional as F
+import numpy as np
 
 
 def inference(INPUT_DIM, HIDDEN_DIM, Z_DIM, NUM_HIDDEN_LAYERS, NUM_CLASSES,PROCESSED_GRAPH_PATH, WEIGHTS_PATH):
@@ -22,16 +23,15 @@ def inference(INPUT_DIM, HIDDEN_DIM, Z_DIM, NUM_HIDDEN_LAYERS, NUM_CLASSES,PROCE
     with torch.no_grad():
         for batch in loop:
             x_input_vgae = batch.x * batch.train_mask # this is in range 1 - 3
-            x_input_eval = (batch.x-1)*batch.train_mask  # this is in range 0 - 2 (as classes have to start at 0 for evaluation)
+            x_input_eval = (batch.x)  # this is in range 0 - 2 (as classes have to start at 0 for evaluation)
 
             ### VGAE
             X_raw_logits, _ , _ = vgae(x_input_vgae, batch.edge_index)
             X_reconstructed = F.softmax(X_raw_logits, dim=1)
-            x_states = transform_to_states(X_reconstructed)
-
+            x_states = transform_to_states(X_reconstructed)+1
 
             #### Evaluation 
-            recall, precision,f1 = basic_evaluation_metric(x_states*batch.train_mask, x_input_eval,batch.train_mask)
+            recall, precision,f1 = basic_evaluation_metric(x_states, x_input_eval,batch.train_mask)
             custom_metric = custom_evaluation_metric(x_states)
             custom_metric_strict = custom_evaluation_metric_strict(x_states+1, batch.x)
             print(f"Recall: {recall}")
