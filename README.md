@@ -13,6 +13,6 @@ This project explores how suited Variational Graph Autoencoder are for the recon
 * **[Question 1]:** How well can Variational Graph Autoencoder reconstruct missing data from an epidemiological
 dataset?
 * **[Question 2]:** How well does it perform against other methods?
-* **[Question 3]:** 3. How does it perform when the amount of data or missingness changes?
+* **[Question 3]:** How does it perform when the amount of data or missingness changes?
 
 This repository contains the source code used for the VGAE and data creation used to conduct the research and generate the final thesis results, as well as the bachelor thesis itsself. 
