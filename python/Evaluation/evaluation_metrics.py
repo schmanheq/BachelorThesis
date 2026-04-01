@@ -21,8 +21,6 @@ def basic_evaluation_metric(preds, target, mask):
     clean_preds = (preds-1)[mask.bool()]
     clean_target = (target-1)[mask.bool()]
 
-
-
     precision_metric = MulticlassPrecision(num_classes=3, average='none')
     recall_metric = MulticlassRecall(num_classes=3, average='none')
     f1_metric = MulticlassF1Score(num_classes=3, average='none')
@@ -44,6 +42,7 @@ def confusion_matrix(preds,target,mask):
         pass
     try:
         mask = torch.from_numpy(mask).long()
+
     except:
         pass
     mask = ~(mask.bool())
@@ -74,11 +73,13 @@ def matth_coeff(preds,target,mask):
     return res
 
 def custom_evaluation_metric(preds, batch_size):
-    if preds.ndim!=3:
-        preds = preds.reshape((batch_size, 10000,90))
+    if preds.ndim != 3:
+        preds = preds.reshape((batch_size, 10000, 90))
     preds = np.asanyarray(preds)
-    violations = preds[..., 1:] < preds[..., :-1]
-    return np.sum(np.sum(violations, axis=(1, 2))/900000)/batch_size
+    violations = preds[..., 1:] >= preds[..., :-1]
+    rows_with_errors = np.any(violations, axis=(1, 2))
+    count = np.sum(rows_with_errors)
+    return count
 
 def custom_evaluation_metric_strict(preds,target, batch_size):
     if preds.ndim!=3:

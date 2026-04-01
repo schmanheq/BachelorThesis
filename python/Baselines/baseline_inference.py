@@ -8,7 +8,7 @@ from ..Baselines.svdImputer import svd_inf
 import numpy as np
 
 def inference_baselines(PROCESSED_GRAPH_PATH, simple_imputer, majority_predictor, svd, svd_path):
-    batch_size = 2
+    batch_size = 1
     inference_data = MyGraphDataset(root_dir=PROCESSED_GRAPH_PATH)
     dataloader = DataLoader(inference_data, batch_size=batch_size)
     total_f1 = torch.tensor([0.0,0.0,0.0])

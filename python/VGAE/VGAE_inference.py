@@ -36,21 +36,20 @@ def inference(INPUT_DIM, HIDDEN_DIM, Z_DIM, NUM_HIDDEN_LAYERS_ENC, NUM_HIDDEN_LA
             x_states = transform_to_states(X_reconstructed)+1
 
             #### Evaluation 
-            _,_,f1 = basic_evaluation_metric(x_states, x_input_eval,batch.train_mask)
-            m_coef = matth_coeff(x_states, x_input_eval,batch.train_mask)
-            c_matrix= confusion_matrix(x_states, x_input_eval, batch.train_mask)
+            #_,_,f1 = basic_evaluation_metric(x_states, x_input_eval,batch.train_mask)
+            #m_coef = matth_coeff(x_states, x_input_eval,batch.train_mask)
+            #c_matrix= confusion_matrix(x_states, x_input_eval, batch.train_mask)
             custom_metric = custom_evaluation_metric(x_states, batchsize)
             
             counter+=1
-            total_f1+=f1
-            total_mc+=m_coef
-            total_cf_matrix+=c_matrix
-
+            # total_f1+=f1
+            # total_mc+=m_coef
+            # total_cf_matrix+=c_matrix
             custom_metric_tracker+=custom_metric
-    print(f"Average F1: {total_f1/counter}")
-    print(f"Average MC Coefficient: {total_mc/counter}")
-    print(f"Average Confusion Matrix: ")
-    print(total_cf_matrix/counter)
-    print(f"Average Custom Metric: {custom_metric_tracker/counter}")
+    # print(f"Average F1: {total_f1/counter}")
+    # print(f"Average MC Coefficient: {total_mc/counter}")
+    # print(f"Average Confusion Matrix: ")
+    # print(total_cf_matrix/counter)
+    print(f"Average Custom Metric: {custom_metric_tracker}")
     return
                                     
